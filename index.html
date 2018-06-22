@@ -38,7 +38,49 @@
       // ----------------------------------------------------------------------
       // HTTP requests
 
+      const makeRequest = (method, url, handler) => {
+        const httpRequest = new XMLHttpRequest();
+        httpRequest.onreadystatechange = handler;
+        httpRequest.open(method, url);
+        httpRequest.send();
+      };
 
+      const createHandler = (fn) => (event) => {
+        const httpRequest = event.target;
+        if (httpRequest.readyState === 4) {
+          fn(httpRequest);
+        }
+      };
+
+      const responseHandler = createHandler(
+        (request) => {
+          if (request.status === 200) {
+            console.log(JSON.parse(request.responseText));
+          } else if (request.status === 404) {
+            console.log('Account with the specified id is not found');
+          } else {
+            console.log('Unexpected Error');
+          }
+        }
+      );
+
+      const accountsIdDeleteHandler = createHandler(
+        (request) => {
+          if (request.status === 204) {
+            console.log('Account deleted successfully');
+          } else {
+            console.log('Unexpected Error');
+          }
+        }
+      );
+
+      const URL = 'https://dev.presscentric.com/test/accounts'
+      const accountsGet = () => makeRequest('GET', URL, responseHandler);
+      const accountsIdGet = (id) => makeRequest('GET', `${URL}/${id}`, responseHandler);
+      const accountsIdDelete = (id) => makeRequest('DELETE', `${URL}/${id}`, accountsIdDeleteHandler);
+
+
+          
       // ----------------------------------------------------------------------
       // State and state handling
       const appState = {};
