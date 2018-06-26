@@ -27,11 +27,39 @@
       // ----------------------------------------------------------------------
       // Components
 
+      class Input extends React.Component {
+        constructor(props) {
+          super(props);
+          this.state = { value: "" };
+          this.onChange = this.onChange.bind(this);
+        }
+
+        onChange(e) {
+          const value = e.target.value;
+          this.setState({ value });
+          this.props.onValueChange(value);
+        }
+
+        render() {
+          return (
+            <input
+              type="text"
+              value={this.state.value}
+              onChange={this.onChange}
+              autocomplete="on"
+              placeholder="Enter account name"
+            />
+          );
+        }
+      }
+
       const Main = (props) => (
         <div style={{
           padding: "10px",
           background: "red"
-        }}></div>
+        }}>
+          <Input onValueChange={props.setSearchString} />
+        </div>
       );
 
 
@@ -55,11 +83,11 @@
       const responseHandler = createHandler(
         (request) => {
           if (request.status === 200) {
-            setAllAccounts(JSON.parse(request.responseText));
+            update("allAccounts", JSON.parse(request.responseText));
           } else if (request.status === 404) {
-            console.log('Account with the specified id is not found');
+            console.log("Account with the specified id is not found");
           } else {
-            console.log('Unexpected Error');
+            console.log("Unexpected Error");
           }
         }
       );
@@ -67,17 +95,17 @@
       const accountsIdDeleteHandler = createHandler(
         (request) => {
           if (request.status === 204) {
-            console.log('Account deleted successfully');
+            console.log("Account deleted successfully");
           } else {
-            console.log('Unexpected Error');
+            console.log("Unexpected Error");
           }
         }
       );
 
-      const URL = 'https://dev.presscentric.com/test/accounts'
-      const accountsGet = () => makeRequest('GET', URL, responseHandler);
-      const accountsIdGet = (id) => makeRequest('GET', `${URL}/${id}`, responseHandler);
-      const accountsIdDelete = (id) => makeRequest('DELETE', `${URL}/${id}`, accountsIdDeleteHandler);
+      const URL = "https://dev.presscentric.com/test/accounts"
+      const accountsGet = () => makeRequest("GET", URL, responseHandler);
+      const accountsIdGet = (id) => makeRequest("GET", `${URL}/${id}`, responseHandler);
+      const accountsIdDelete = (id) => makeRequest("DELETE", `${URL}/${id}`, accountsIdDeleteHandler);
 
 
           
@@ -85,12 +113,15 @@
       // State and state handling
       const appState = {
         allAccounts: [],
+        searchString: "",
+        setSearchString: (data) => update("searchString", data),
       };
 
-      const setAllAccounts = (data) => {
-        appState.allAccounts = data;
+      const update = (path, data) => {
+        appState[path] = data;
         renderMain();
       };
+
 
       // ----------------------------------------------------------------------
       // Render the view
