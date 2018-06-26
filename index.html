@@ -55,7 +55,7 @@
       const responseHandler = createHandler(
         (request) => {
           if (request.status === 200) {
-            console.log(JSON.parse(request.responseText));
+            setAllAccounts(JSON.parse(request.responseText));
           } else if (request.status === 404) {
             console.log('Account with the specified id is not found');
           } else {
@@ -83,8 +83,14 @@
           
       // ----------------------------------------------------------------------
       // State and state handling
-      const appState = {};
+      const appState = {
+        allAccounts: [],
+      };
 
+      const setAllAccounts = (data) => {
+        appState.allAccounts = data;
+        renderMain();
+      };
 
       // ----------------------------------------------------------------------
       // Render the view
@@ -93,7 +99,8 @@
         document.getElementById("react-app")
       );
 
-      // Inital render:
+      // Inital request and render:
+      accountsGet();
       renderMain();
 
     </script>
