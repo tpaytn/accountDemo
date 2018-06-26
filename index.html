@@ -53,14 +53,21 @@
         }
       }
 
-      const Main = (props) => (
-        <div style={{
-          padding: "10px",
-          background: "red"
-        }}>
-          <Input onValueChange={props.setSearchString} />
-        </div>
-      );
+      const Main = (props) => {
+        // State processing and transformation
+        const matchingNames = props.getMatchingNames(props.allAccounts, props.searchString);
+
+        // Root component
+        return (
+          <div style={{
+            padding: "10px",
+            background: "red"
+          }}>
+            <Input onValueChange={props.setSearchString} />
+            {matchingNames.map((e) => <p>{e.name}</p>)}
+          </div>
+        );
+      };
 
 
       // ----------------------------------------------------------------------
@@ -111,10 +118,17 @@
           
       // ----------------------------------------------------------------------
       // State and state handling
+
+      // returns accounts that match the search string (case insensitive)
+      const getMatchingNames = (accounts, searchString) => (
+        accounts.filter((e) => e.name.toLowerCase().includes(searchString.toLowerCase()))
+      );
+
       const appState = {
         allAccounts: [],
         searchString: "",
         setSearchString: (data) => update("searchString", data),
+        getMatchingNames,
       };
 
       const update = (path, data) => {
