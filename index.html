@@ -17,12 +17,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/es7-shim/6.0.0/es7-shim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.js"></script>
   </head>
-  <body id="react-app" style="
-    margin: 0;
-    padding: 0;
-    font-family: 'Helvetica Neue', Helvetica, sans-serif;
-    font-size: 0.8rem;
-  ">
+  <body
+    id="react-app" 
+    style="
+      margin: 0;
+      padding: 0;
+      background: #44537A;
+      font-family: 'Helvetica Neue', Helvetica, sans-serif;
+      font-size: 0.8rem;
+    "
+  >
     <script type="text/babel">
       // ----------------------------------------------------------------------
       // Components
@@ -30,6 +34,7 @@
       const DropdownItem = (props) => (
         <p
           onClick={props.onClick}
+          onKeyPress={(e) => (e.key === "Enter" || e.key === " ") && props.onClick()}
           style={{
             margin: "0",
             padding: "6px 3px",
@@ -42,7 +47,7 @@
 
       const Dropdown = (props) => (
         props.enabled ?
-          <div style={{ marginTop: "2px" }}>
+          <div style={{ marginTop: "2px", borderTop: "solid 1px #999", width: "500px" }}>
             {props.list.map((e) =>
               <DropdownItem onClick={() => props.onClick(e.id)}>
                 {e.name}
@@ -92,12 +97,11 @@
         return (
           <div style={{
             padding: "10px",
-            background: "#777"
           }}>
             <div style={{
               display: "flex",
               flexDirection: "column",
-              width: "140px",
+              maxWidth: "500px",
               background: "#FFF",
             }}>
               <AccountInput onValueChange={props.setSearchString} />
