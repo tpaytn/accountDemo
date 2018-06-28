@@ -21,13 +21,39 @@
     margin: 0;
     padding: 0;
     font-family: 'Helvetica Neue', Helvetica, sans-serif;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
   ">
     <script type="text/babel">
       // ----------------------------------------------------------------------
       // Components
 
-      class Input extends React.Component {
+      const DropdownItem = (props) => (
+        <p
+          onClick={props.onClick}
+          style={{
+            margin: "0",
+            padding: "6px 3px",
+          }}
+          tabIndex="0"
+        >
+          {props.children}
+        </p>
+      );
+
+      const Dropdown = (props) => (
+        props.enabled ?
+          <div style={{ marginTop: "2px" }}>
+            {props.list.map((e) =>
+              <DropdownItem onClick={() => props.onClick(e.id)}>
+                {e.name}
+              </DropdownItem>
+            )}
+          </div>
+        :
+          null
+      );
+
+      class AccountInput extends React.Component {
         constructor(props) {
           super(props);
           this.state = { value: "" };
@@ -46,25 +72,41 @@
               type="text"
               value={this.state.value}
               onChange={this.onChange}
-              autocomplete="on"
               placeholder="Enter account name"
+              style={{
+                height: "36px",
+                padding: "0 6px",
+                border: "none",
+              }}
             />
           );
         }
       }
 
       const Main = (props) => {
-        // State processing and transformation
+        // State processing and data transformation
         const matchingNames = props.getMatchingNames(props.allAccounts, props.searchString);
+        const showDropdown = !!props.searchString;
 
         // Root component
         return (
           <div style={{
             padding: "10px",
-            background: "red"
+            background: "#777"
           }}>
-            <Input onValueChange={props.setSearchString} />
-            {matchingNames.map((e) => <p>{e.name}</p>)}
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              width: "140px",
+              background: "#FFF",
+            }}>
+              <AccountInput onValueChange={props.setSearchString} />
+              <Dropdown
+                enabled={showDropdown}
+                list={matchingNames}
+                onClick={props.getCurrentAccount}
+              />
+            </div>
           </div>
         );
       };
@@ -91,6 +133,16 @@
         (request) => {
           if (request.status === 200) {
             update("allAccounts", JSON.parse(request.responseText));
+          } else {
+            console.log("Unexpected Error");
+          }
+        }
+      );
+
+      const idResponseHandler = createHandler(
+        (request) => {
+          if (request.status === 200) {
+            update("currentAccount", JSON.parse(request.responseText));
           } else if (request.status === 404) {
             console.log("Account with the specified id is not found");
           } else {
@@ -111,7 +163,7 @@
 
       const URL = "https://dev.presscentric.com/test/accounts"
       const accountsGet = () => makeRequest("GET", URL, responseHandler);
-      const accountsIdGet = (id) => makeRequest("GET", `${URL}/${id}`, responseHandler);
+      const accountsIdGet = (id) => makeRequest("GET", `${URL}/${id}`, idResponseHandler);
       const accountsIdDelete = (id) => makeRequest("DELETE", `${URL}/${id}`, accountsIdDeleteHandler);
 
 
@@ -126,6 +178,8 @@
 
       const appState = {
         allAccounts: [],
+        currentAccount: undefined,
+        getCurrentAccount: accountsIdGet,
         searchString: "",
         setSearchString: (data) => update("searchString", data),
         getMatchingNames,
