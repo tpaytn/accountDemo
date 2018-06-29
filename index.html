@@ -62,7 +62,11 @@
 
       const Dropdown = (props) => (
         props.enabled ?
-          <div style={{ marginTop: "2px", borderTop: "solid 1px #999", width: "500px" }}>
+          <div style={{
+            marginTop: "2px",
+            borderTop: "solid 1px #999",
+            width: "500px"
+          }}>
             {props.list.map((e) =>
               <DropdownItem onClick={() => props.onClick(e.id)}>
                 {e.name}
@@ -154,9 +158,7 @@
 
         // Root component
         return (
-          <div style={{
-            padding: "10px",
-          }}>
+          <div style={{ padding: "10px" }}>
             {props.currentAccount ?
               <AccountView
                 {...props.currentAccount}
@@ -184,55 +186,44 @@
 
 
       // ----------------------------------------------------------------------
-      // HTTP requests
+      // HTTP requests and responses
 
       const makeRequest = (method, url, handler) => {
         const httpRequest = new XMLHttpRequest();
-        httpRequest.onreadystatechange = handler;
+        httpRequest.onreadystatechange = () =>
+          httpRequest.readyState === 4 && handler(httpRequest);
         httpRequest.open(method, url);
         httpRequest.send();
       };
 
-      const createHandler = (fn) => (event) => {
-        const httpRequest = event.target;
-        if (httpRequest.readyState === 4) {
-          fn(httpRequest);
+      // Request handlers
+      const getAccountsHandler = (request) => {
+        if (request.status === 200) {
+          update("allAccounts", JSON.parse(request.responseText));
+        } else {
+          console.log("Unexpected Error");
         }
       };
 
-      const getAccountsHandler = createHandler(
-        (request) => {
-          if (request.status === 200) {
-            update("allAccounts", JSON.parse(request.responseText));
-          } else {
-            console.log("Unexpected Error");
-          }
+      const getAccountByIdHandler = (request) => {
+        if (request.status === 200) {
+          update("searchString", "");
+          update("currentAccount", JSON.parse(request.responseText));
+        } else if (request.status === 404) {
+          console.log("Account with the specified id is not found");
+        } else {
+          console.log("Unexpected Error");
         }
-      );
+      };
 
-      const getAccountByIdHandler = createHandler(
-        (request) => {
-          if (request.status === 200) {
-            update("searchString", "");
-            update("currentAccount", JSON.parse(request.responseText));
-          } else if (request.status === 404) {
-            console.log("Account with the specified id is not found");
-          } else {
-            console.log("Unexpected Error");
-          }
+      const deleteAccountHandler = (request) => {
+        if (request.status === 204) {
+          console.log("Account deleted successfully");
+          getAccounts();
+        } else {
+          console.log("Unexpected Error");
         }
-      );
-
-      const deleteAccountHandler = createHandler(
-        (request) => {
-          if (request.status === 204) {
-            console.log("Account deleted successfully");
-            getAccounts();
-          } else {
-            console.log("Unexpected Error");
-          }
-        }
-      );
+      };
 
       const URL = "https://dev.presscentric.com/test/accounts";
       const getAccounts = () => makeRequest("GET", URL, getAccountsHandler);
@@ -242,14 +233,17 @@
 
       // ----------------------------------------------------------------------
       // State and state handling
+      const update = (path, data) => {
+        appState[path] = data;
+        renderMain();
+      };
 
-      // returns accounts that match the search string (case insensitive)
+      // match account name to search string (case insensitive)
       const filterAccounts = (accounts, searchString) => (
         accounts.filter((e) => e.name.toLowerCase().includes(searchString.toLowerCase()))
       );
 
-      const setSearchString = (data) => update("searchString", data);
-
+      // State
       const appState = {
         // state data
         allAccounts: [],
@@ -257,16 +251,11 @@
         searchString: "",
 
         // callback functions
-        setSearchString,
+        setSearchString: (data) => update("searchString", data),
         filterAccounts,
         getAccountById,
         deleteAccount,
         goBack: () => update("currentAccount", undefined),
-      };
-
-      const update = (path, data) => {
-        appState[path] = data;
-        renderMain();
       };
 
 
