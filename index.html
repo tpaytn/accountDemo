@@ -29,6 +29,52 @@
   >
     <script type="text/babel">
       // ----------------------------------------------------------------------
+      // HTTP requests and responses
+
+      const makeRequest = (method, url, handler) => {
+        const httpRequest = new XMLHttpRequest();
+        httpRequest.onreadystatechange = () =>
+          httpRequest.readyState === 4 && handler(httpRequest);
+        httpRequest.open(method, url);
+        httpRequest.send();
+      };
+
+      // Request handlers
+      const getAccountsHandler = (request) => {
+        if (request.status === 200) {
+          update("allAccounts", JSON.parse(request.responseText));
+        } else {
+          console.log("Unexpected Error");
+        }
+      };
+
+      const getAccountByIdHandler = (request) => {
+        if (request.status === 200) {
+          update("searchString", "");
+          update("currentAccount", JSON.parse(request.responseText));
+        } else if (request.status === 404) {
+          console.log("Account with the specified id is not found");
+        } else {
+          console.log("Unexpected Error");
+        }
+      };
+
+      const deleteAccountHandler = (request) => {
+        if (request.status === 204) {
+          console.log("Account deleted successfully");
+          getAccounts();
+        } else {
+          console.log("Unexpected Error");
+        }
+      };
+
+      const URL = "https://dev.presscentric.com/test/accounts";
+      const getAccounts = () => makeRequest("GET", URL, getAccountsHandler);
+      const getAccountById = (id) => makeRequest("GET", `${URL}/${id}`, getAccountByIdHandler);
+      const deleteAccount = (id) => makeRequest("DELETE", `${URL}/${id}`, deleteAccountHandler);
+
+
+      // ----------------------------------------------------------------------
       // Components
 
       const Button = (props) => (
@@ -183,52 +229,6 @@
           </div>
         );
       };
-
-
-      // ----------------------------------------------------------------------
-      // HTTP requests and responses
-
-      const makeRequest = (method, url, handler) => {
-        const httpRequest = new XMLHttpRequest();
-        httpRequest.onreadystatechange = () =>
-          httpRequest.readyState === 4 && handler(httpRequest);
-        httpRequest.open(method, url);
-        httpRequest.send();
-      };
-
-      // Request handlers
-      const getAccountsHandler = (request) => {
-        if (request.status === 200) {
-          update("allAccounts", JSON.parse(request.responseText));
-        } else {
-          console.log("Unexpected Error");
-        }
-      };
-
-      const getAccountByIdHandler = (request) => {
-        if (request.status === 200) {
-          update("searchString", "");
-          update("currentAccount", JSON.parse(request.responseText));
-        } else if (request.status === 404) {
-          console.log("Account with the specified id is not found");
-        } else {
-          console.log("Unexpected Error");
-        }
-      };
-
-      const deleteAccountHandler = (request) => {
-        if (request.status === 204) {
-          console.log("Account deleted successfully");
-          getAccounts();
-        } else {
-          console.log("Unexpected Error");
-        }
-      };
-
-      const URL = "https://dev.presscentric.com/test/accounts";
-      const getAccounts = () => makeRequest("GET", URL, getAccountsHandler);
-      const getAccountById = (id) => makeRequest("GET", `${URL}/${id}`, getAccountByIdHandler);
-      const deleteAccount = (id) => makeRequest("DELETE", `${URL}/${id}`, deleteAccountHandler);
 
 
       // ----------------------------------------------------------------------
