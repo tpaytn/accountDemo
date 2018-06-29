@@ -149,7 +149,7 @@
 
       const Main = (props) => {
         // State processing and data transformation
-        const matchingNames = props.getMatchingNames(props.allAccounts, props.searchString);
+        const matchingNames = props.filterAccounts(props.allAccounts, props.searchString);
         const showDropdown = !!props.searchString;
 
         // Root component
@@ -160,7 +160,7 @@
             {props.currentAccount ?
               <AccountView
                 {...props.currentAccount}
-                onDelete={props.accountsIdDelete}
+                onDelete={props.deleteAccount}
                 goBack={props.goBack}
               />
             :
@@ -174,7 +174,7 @@
                 <Dropdown
                   enabled={showDropdown}
                   list={matchingNames}
-                  onClick={props.getCurrentAccount}
+                  onClick={props.getAccountById}
                 />
               </div>
             }
@@ -200,7 +200,7 @@
         }
       };
 
-      const responseHandler = createHandler(
+      const getAccountsHandler = createHandler(
         (request) => {
           if (request.status === 200) {
             update("allAccounts", JSON.parse(request.responseText));
@@ -210,9 +210,10 @@
         }
       );
 
-      const idResponseHandler = createHandler(
+      const getAccountByIdHandler = createHandler(
         (request) => {
           if (request.status === 200) {
+            update("searchString", "");
             update("currentAccount", JSON.parse(request.responseText));
           } else if (request.status === 404) {
             console.log("Account with the specified id is not found");
@@ -222,39 +223,44 @@
         }
       );
 
-      const accountsIdDeleteHandler = createHandler(
+      const deleteAccountHandler = createHandler(
         (request) => {
           if (request.status === 204) {
             console.log("Account deleted successfully");
+            getAccounts();
           } else {
             console.log("Unexpected Error");
           }
         }
       );
 
-      const URL = "https://dev.presscentric.com/test/accounts"
-      const accountsGet = () => makeRequest("GET", URL, responseHandler);
-      const accountsIdGet = (id) => makeRequest("GET", `${URL}/${id}`, idResponseHandler);
-      const accountsIdDelete = (id) => makeRequest("DELETE", `${URL}/${id}`, accountsIdDeleteHandler);
+      const URL = "https://dev.presscentric.com/test/accounts";
+      const getAccounts = () => makeRequest("GET", URL, getAccountsHandler);
+      const getAccountById = (id) => makeRequest("GET", `${URL}/${id}`, getAccountByIdHandler);
+      const deleteAccount = (id) => makeRequest("DELETE", `${URL}/${id}`, deleteAccountHandler);
 
 
-          
       // ----------------------------------------------------------------------
       // State and state handling
 
       // returns accounts that match the search string (case insensitive)
-      const getMatchingNames = (accounts, searchString) => (
+      const filterAccounts = (accounts, searchString) => (
         accounts.filter((e) => e.name.toLowerCase().includes(searchString.toLowerCase()))
       );
 
+      const setSearchString = (data) => update("searchString", data);
+
       const appState = {
+        // state data
         allAccounts: [],
         currentAccount: undefined,
-        getCurrentAccount: accountsIdGet,
         searchString: "",
-        setSearchString: (data) => update("searchString", data),
-        getMatchingNames,
-        accountsIdDelete,
+
+        // callback functions
+        setSearchString,
+        filterAccounts,
+        getAccountById,
+        deleteAccount,
         goBack: () => update("currentAccount", undefined),
       };
 
@@ -272,7 +278,7 @@
       );
 
       // Inital request and render:
-      accountsGet();
+      getAccounts();
       renderMain();
 
     </script>
