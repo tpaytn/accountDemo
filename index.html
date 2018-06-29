@@ -34,7 +34,7 @@
       const makeRequest = (method, url, handler) => {
         const httpRequest = new XMLHttpRequest();
         httpRequest.onreadystatechange = () =>
-          httpRequest.readyState === 4 && handler(httpRequest);
+          (httpRequest.readyState === 4 && handler(httpRequest));
         httpRequest.open(method, url);
         httpRequest.send();
       };
@@ -95,7 +95,9 @@
       const DropdownItem = (props) => (
         <p
           onClick={props.onClick}
-          onKeyPress={(e) => (e.key === "Enter" || e.key === " ") && props.onClick()}
+          onKeyPress={(event) =>
+            ((event.key === "Enter" || event.key === " ") && props.onClick())
+          }
           style={{
             margin: "0",
             padding: "6px 3px",
@@ -130,8 +132,8 @@
           this.onChange = this.onChange.bind(this);
         }
 
-        onChange(e) {
-          const value = e.target.value;
+        onChange(event) {
+          const value = event.target.value;
           this.setState({ value });
           this.props.onValueChange(value);
         }
