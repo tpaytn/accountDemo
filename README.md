@@ -1,4 +1,4 @@
-# Simple single-page react app to request and display some account information
+# Single-page react app to request and display some account information
 
 GETs a list of Accounts.
 
