@@ -28,6 +28,8 @@
     "
   >
     <script type="text/babel">
+    // IIFE to avoid global variable conflicts
+    (() => {
       // ----------------------------------------------------------------------
       // HTTP requests and responses
 
@@ -272,6 +274,7 @@
       getAccounts();
       renderMain();
 
+    })();
     </script>
   </body>
 </html>
