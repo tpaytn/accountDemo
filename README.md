@@ -6,5 +6,4 @@ User can select an account by name from a dropdown with auto-complete functional
 
 GETs and displays account details for the selected account.
 
-Option to DELETE a selected account.
-Note: DELETE call won't actually remove the account from the back end.
+Option to DELETE selected account. (Note: As the backend does not allow the DELETE action, this will produce an error message for the user.  If the backend were to allow the DELETE action, the app should be fully functional.)
