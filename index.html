@@ -41,12 +41,19 @@
         httpRequest.send();
       };
 
+      // State update actions used by request handlers
+      const goBack = () => update("currentAccount", undefined);
+      const showError = () => update(
+        "modalMessage",
+        "There was an unexpected error processing your request.  Please try again."
+      );
+
       // Request handlers
       const getAccountsHandler = (request) => {
         if (request.status === 200) {
           update("allAccounts", JSON.parse(request.responseText));
         } else {
-          console.log("Unexpected Error");
+          update("modalMessage", "Unable to get accounts, please try again later.");
         }
       };
 
@@ -55,18 +62,19 @@
           update("searchString", "");
           update("currentAccount", JSON.parse(request.responseText));
         } else if (request.status === 404) {
-          console.log("Account with the specified id is not found");
+          update("modalMessage", "Account with the specified id is not found.");
         } else {
-          console.log("Unexpected Error");
+          showError();
         }
       };
 
       const deleteAccountHandler = (request) => {
         if (request.status === 204) {
-          console.log("Account deleted successfully");
+          update("modalMessage", "Account deleted successfully.");
           getAccounts();
+          goBack();
         } else {
-          console.log("Unexpected Error");
+          showError();
         }
       };
 
@@ -92,6 +100,40 @@
         >
           {props.children}
         </button>
+      );
+
+      const ModalMsg = (props) => (
+        <div
+          onClick={props.onClick}
+          style={{
+            position: "absolute",
+            display: "flex",
+            justifyContent: "center",
+            width: "100vw",
+            height: "100vh",
+            top: "0",
+            left: "0",
+            background: "rgba(0, 0, 0, 0.5)",
+          }}
+        >
+          <div style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            height: "100px",
+            width: "210px",
+            marginTop: "100px",
+            padding: "15px",
+            boxSizing: "border-box",
+            border: "solid 4px #4FF",
+            borderRadius: "10px",
+            background: "#FFF",
+          }}>
+            <div style={{ fontSize: "1.1em" }}>
+              {props.children}
+            </div>
+          </div>
+        </div>
       );
 
       const DropdownItem = (props) => (
@@ -205,15 +247,23 @@
         // State processing and data transformation
         const matchingNames = props.filterAccounts(props.allAccounts, props.searchString);
         const showDropdown = !!props.searchString;
+        const showModal = !!props.modalMessage;
 
         // Root component
         return (
           <div style={{ padding: "10px" }}>
+            {showModal ?
+              <ModalMsg onClick={props.dismissModal}>
+                {props.modalMessage}
+              </ModalMsg>
+            :
+              null
+            }
             {props.currentAccount ?
               <AccountView
                 {...props.currentAccount}
-                onDelete={props.deleteAccount}
                 goBack={props.goBack}
+                onDelete={props.deleteAccount}
               />
             :
               <div style={{
@@ -253,13 +303,15 @@
         allAccounts: [],
         currentAccount: undefined,
         searchString: "",
+        modalMessage: undefined,
 
         // callback functions
         setSearchString: (data) => update("searchString", data),
         filterAccounts,
         getAccountById,
         deleteAccount,
-        goBack: () => update("currentAccount", undefined),
+        goBack,
+        dismissModal: () => update("modalMessage", undefined),
       };
 
 
