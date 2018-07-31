@@ -33,13 +33,21 @@
       // ----------------------------------------------------------------------
       // HTTP requests and responses
 
-      const makeRequest = (method, url, handler) => {
-        const httpRequest = new XMLHttpRequest();
-        httpRequest.onreadystatechange = () =>
-          (httpRequest.readyState === 4 && handler(httpRequest));
-        httpRequest.open(method, url);
-        httpRequest.send();
-      };
+      const doRequest = (method, url) => new Promise(
+        (res, rej) => {
+          const httpRequest = new XMLHttpRequest();
+          httpRequest.onload = () => {
+            if (httpRequest.status >= 200 && httpRequest.status < 300) {
+              res(httpRequest.responseText);
+            } else {
+              rej(httpRequest);
+            }
+          };
+          httpRequest.onerror = () => rej(Error(httpRequest.statusText));
+          httpRequest.open(method, url);
+          httpRequest.send();
+        }
+      );
 
       // State update actions used by request handlers
       const goBack = () => update("currentAccount", undefined);
@@ -48,40 +56,37 @@
         "There was an unexpected error processing your request.  Please try again."
       );
 
-      // Request handlers
-      const getAccountsHandler = (request) => {
-        if (request.status === 200) {
-          update("allAccounts", JSON.parse(request.responseText));
-        } else {
-          update("modalMessage", "Unable to get accounts, please try again later.");
-        }
-      };
+      // Request handling
+      const URL = "https://dev.presscentric.com/test/accounts";
 
-      const getAccountByIdHandler = (request) => {
-        if (request.status === 200) {
+      const getAccounts = () => doRequest("GET", URL)
+        .then((response) => {
+          update("allAccounts", JSON.parse(response));
+        }).catch(() =>
+          update("modalMessage", "Unable to get accounts, please try again later.")
+        );
+
+
+      const getAccountById = (id) => doRequest("GET", `${URL}/${id}`)
+        .then((response) => {
           update("searchString", "");
-          update("currentAccount", JSON.parse(request.responseText));
-        } else if (request.status === 404) {
-          update("modalMessage", "Account with the specified id is not found.");
-        } else {
-          showError();
-        }
-      };
+          update("currentAccount", JSON.parse(response));
+        })
+        .catch((request) => {
+          if (request.status === 404) {
+            update("modalMessage", "Account with the specified id is not found.");
+          } else {
+            showError();
+          }
+        });
 
-      const deleteAccountHandler = (request) => {
-        if (request.status === 204) {
+      const deleteAccount = (id) => doRequest("DELETE", `${URL}/${id}`)
+        .then(() => {
           update("modalMessage", "Account deleted successfully.");
           getAccounts();
           goBack();
-        } else {
-          showError();
-        }
-      };
-
-      const URL = "https://dev.presscentric.com/test/accounts";
-      const getAccounts = () => makeRequest("GET", URL, getAccountsHandler);
-      const getAccountById = (id) => makeRequest("GET", `${URL}/${id}`, getAccountByIdHandler);
-      const deleteAccount = (id) => makeRequest("DELETE", `${URL}/${id}`, deleteAccountHandler);
+        })
+        .catch(showError);
 
 
       // ----------------------------------------------------------------------
