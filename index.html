@@ -52,8 +52,12 @@
 
       // State update actions used by request handlers
       const goBack = () => update("currentAccount", undefined);
-      const showError = () => update(
-        "modalMessage",
+      const showModal = (message) => {
+        update("modal.message", message);
+        update("modal.visible", true);
+      };
+
+      const showError = () => showModal(
         "There was an unexpected error processing your request.  Please try again."
       );
 
@@ -61,10 +65,10 @@
       const URL = "https://dev.presscentric.com/test/accounts";
 
       const getAccounts = () => doRequest("GET", URL)
-        .then((response) => {
-          update("allAccounts", JSON.parse(response));
-        }).catch(() =>
-          update("modalMessage", "Unable to get accounts, please try again later.")
+        .then((response) =>
+          update("allAccounts", JSON.parse(response))
+        ).catch(() =>
+          showModal("Unable to get accounts, please try again later.")
         );
 
 
@@ -75,7 +79,7 @@
         })
         .catch((request) => {
           if (request.status === 404) {
-            update("modalMessage", "Account with the specified id is not found.");
+            showModal("Account with the specified id is not found.");
           } else {
             showError();
           }
@@ -83,7 +87,7 @@
 
       const deleteAccount = (id) => doRequest("DELETE", `${URL}/${id}`)
         .then(() => {
-          update("modalMessage", "Account deleted successfully.");
+          showModal("Account deleted successfully.");
           getAccounts();
           goBack();
         })
@@ -253,14 +257,13 @@
         // State processing and data transformation
         const matchingNames = props.filterAccounts(props.allAccounts, props.searchString);
         const showDropdown = !!props.searchString;
-        const showModal = !!props.modalMessage;
 
         // Root component
         return (
           <div style={{ padding: "10px" }}>
-            {showModal ?
+            {props.modal.visible ?
               <ModalMsg onClick={props.dismissModal}>
-                {props.modalMessage}
+                {props.modal.message}
               </ModalMsg>
             :
               null
@@ -309,7 +312,10 @@
         allAccounts: [],
         currentAccount: undefined,
         searchString: "",
-        modalMessage: undefined,
+        modal: {
+          visible: false,
+          message: "",
+        },
 
         // callback functions
         setSearchString: (data) => update("searchString", data),
@@ -317,7 +323,7 @@
         getAccountById,
         deleteAccount,
         goBack,
-        dismissModal: () => update("modalMessage", undefined),
+        dismissModal: () => update("modal.visible", false),
       };
 
 
