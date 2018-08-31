@@ -294,7 +294,7 @@
       // ----------------------------------------------------------------------
       // State and state handling
       const update = (path, data) => {
-        appState[path] = data;
+        objectPath.set(appState, path, data);
         renderMain();
       };
 
